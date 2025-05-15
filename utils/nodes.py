@@ -7,12 +7,15 @@ from langgraph.prebuilt import ToolNode
 
 @lru_cache(maxsize=4)
 def _get_model(model_name: str):
+    """
+    for this work, you have to set the model_name in the config
+    """
     if model_name == "openai":
         model = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
     elif model_name == "anthropic":
         model =  ChatAnthropic(temperature=0, model_name="claude-3-sonnet-20240229")
     else:
-        raise ValueError(f"Unsupported model type: {model_name}")
+        model = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
 
     model = model.bind_tools(tools)
     return model
@@ -33,9 +36,10 @@ system_prompt = """Be a helpful assistant"""
 
 # Define the function that calls the model
 def call_model(state, config):
+    
     messages = state["messages"]
     messages = [{"role": "system", "content": system_prompt}] + messages
-    model_name = config.get('configurable', {}).get("model_name", "anthropic")
+    model_name = config.get('configurable', {}).get("model_name", "openai")
     model = _get_model(model_name)
     response = model.invoke(messages)
     # We return a list, because this will get added to the existing list

@@ -2,12 +2,13 @@ from typing import TypedDict, Literal
 
 from langgraph.graph import StateGraph, END
 from utils.nodes import call_model, should_continue, tool_node
-from utils.state import AgentState
-
-
+from utils.state import AgentState, GraphConfig
+from agents.call_card.create_template_agent.llm_utils import structure_data_node
+   
 # Define the config
 class GraphConfig(TypedDict):
-    model_name: Literal["anthropic", "openai"]
+    model_name: Literal["openai"]
+
 
 
 # Define a new graph
@@ -16,6 +17,7 @@ workflow = StateGraph(AgentState, config_schema=GraphConfig)
 # Define the two nodes we will cycle between
 workflow.add_node("agent", call_model)
 workflow.add_node("action", tool_node)
+workflow.add_node("normalize", structure_data_node)
 
 # Set the entrypoint as `agent`
 # This means that this node is the first one called
@@ -38,13 +40,15 @@ workflow.add_conditional_edges(
         # If `tools`, then we call the tool node.
         "continue": "action",
         # Otherwise we finish.
-        "end": END,
+        "end": "normalize",
     },
 )
 
 # We now add a normal edge from `tools` to `agent`.
 # This means that after `tools` is called, `agent` node is called next.
 workflow.add_edge("action", "agent")
+workflow.add_edge("agent", "normalize")
+workflow.add_edge("normalize", END)
 
 # Finally, we compile it!
 # This compiles it into a LangChain Runnable,
