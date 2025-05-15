@@ -7,7 +7,6 @@ from langgraph.prebuilt import ToolNode
 
 @lru_cache(maxsize=4)
 def _get_model(model_name: str):
-    print(f"Getting model: {model_name}")
     if model_name == "openai":
         model = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
     elif model_name == "anthropic":
