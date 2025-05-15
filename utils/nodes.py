@@ -1,7 +1,7 @@
 from functools import lru_cache
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
-from my_agent.utils.tools import tools
+from utils.tools import tools
 from langgraph.prebuilt import ToolNode
 
 
@@ -22,17 +22,24 @@ def _get_model(model_name: str):
 
 # Define the function that determines whether to continue or not
 def should_continue(state):
-    messages = state["messages"]
+    messages = state["messages"]    
     last_message = messages[-1]
+    
+    # Check for tool calls in both direct tool_calls attribute and additional_kwargs
+    has_tool_calls = (
+        getattr(last_message, "tool_calls", None) or 
+        last_message.additional_kwargs.get("tool_calls")
+    )
+    
     # If there are no tool calls, then we finish
-    if not last_message.tool_calls:
+    if not has_tool_calls:
         return "end"
-    # Otherwise if there is, we continue
+    # Otherwise if there are tool calls, we continue
     else:
         return "continue"
 
 
-system_prompt = """Be a helpful assistant"""
+system_prompt = """Be a helpful assistant that generate a call card template based on the user's request. Call the normalize node when finished generate template"""
 
 # Define the function that calls the model
 def call_model(state, config):

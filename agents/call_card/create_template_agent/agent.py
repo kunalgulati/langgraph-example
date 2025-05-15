@@ -3,7 +3,7 @@ from typing import TypedDict, Literal
 from langgraph.graph import StateGraph, END
 from utils.nodes import call_model, should_continue, tool_node
 from utils.state import AgentState, GraphConfig
-from agents.call_card.create_template_agent.llm_utils import structure_data_node
+from agents.call_card.create_template_agent.agent_utils import structure_data_node
    
 # Define the config
 class GraphConfig(TypedDict):
@@ -37,17 +37,17 @@ workflow.add_conditional_edges(
     # will be matched against the keys in this mapping.
     # Based on which one it matches, that node will then be called.
     {
-        # If `tools`, then we call the tool node.
+        # If tools need to be called, we go to the action node
         "continue": "action",
-        # Otherwise we finish.
+        # If no more tool calls, we go to normalize
         "end": "normalize",
     },
 )
 
-# We now add a normal edge from `tools` to `agent`.
-# This means that after `tools` is called, `agent` node is called next.
+# We now add a normal edge from `action` to `agent`.
+# This means that after `action` is called, `agent` node is called next.
 workflow.add_edge("action", "agent")
-workflow.add_edge("agent", "normalize")
+# After normalize is done, we end the workflow
 workflow.add_edge("normalize", END)
 
 # Finally, we compile it!
