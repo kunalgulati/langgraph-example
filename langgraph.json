@@ -2,7 +2,7 @@
   "dependencies": ["./utils"],
   "graphs": {
     "agent": "./my_agent/agent.py:graph",
-    "create_template": "./agents/call_card/template_create/create_template_agent.py:graph"
+    "create_template": "./agents/call_card/create_template_agent/agent.py:graph"
   },
   "env": ".env"
 }
