@@ -2,7 +2,8 @@
   "dependencies": ["./utils"],
   "graphs": {
     "agent": "./my_agent/agent.py:graph",
-    "create_template": "./agents/call_card/create_template_agent/agent.py:graph"
+    "create_template": "./agents/call_card/create_template_agent/agent.py:graph",
+    "modulir_estimate_effort": "./agents/modulir/estimate_effort/agent.py:graph"
   },
   "env": ".env"
 }
