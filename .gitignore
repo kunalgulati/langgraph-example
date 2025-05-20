@@ -8,5 +8,6 @@
 .langgraph_api
 .langgraph_api/*
 
-*/__pycache__
-utils/__pycache__
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
