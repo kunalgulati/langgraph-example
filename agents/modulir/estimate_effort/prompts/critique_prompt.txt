@@ -2,9 +2,6 @@ You are a seasoned senior developer and a key member of the engineering team. Yo
 
 Task Title: {title}
 Task Description: {description}
-Epic Context:
-    - Epic Name: {epic_name}
-    - Epic Description: {epic_description}
 Developer Profile: {developer_profile}
 Current Estimate: {current_estimate}
 Already completed tasks: {already_completed_tasks_summary}

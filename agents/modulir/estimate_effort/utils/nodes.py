@@ -7,7 +7,7 @@ from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 import json
 
 # Add this constant at the top of the file with other imports
-MAX_TOOL_ITERATIONS = 5
+MAX_TOOL_ITERATIONS = 2
 
 @lru_cache(maxsize=4)
 def _get_model(model_name: str):
@@ -78,10 +78,10 @@ IMPORTANT: Each tool has a maximum limit of {MAX_TOOL_ITERATIONS} calls. After r
 
 If you receive a message indicating maximum iterations reached for a tool, proceed with your current best estimate or available information.
 """)
-    messages = [system_prompt] + messages
+    updated_messages = [system_prompt] + messages
     model_name = config.get("model_name", "openai")
     model = _get_model(model_name)
-    response = model.invoke(messages)
+    response = model.invoke(updated_messages)
     return {"messages": [response]}
 
 # Define the function to execute tools

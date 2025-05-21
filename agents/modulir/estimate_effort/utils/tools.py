@@ -209,8 +209,6 @@ def critique_estimate(
         HumanMessage(content=critique_prompt.format(
             title=title,
             description=description,
-            epic_name=epic_name,
-            epic_description=epic_description,
             developer_profile=developer_profile,
             current_estimate=current_estimate,
             already_completed_tasks_summary=already_completed_tasks_summary
