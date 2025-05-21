@@ -4,80 +4,35 @@ from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts.prompt import PromptTemplate
 import json
 import os
 from openai import OpenAI
-from pinecone import Pinecone
+# from pinecone import Pinecone
 
-# Initialize OpenAI and Pinecone clients
+# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-INDEX_NAME = "modulir-agent-development"  # Update this as needed
+# PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+# INDEX_NAME = "modulir-agent-development"  # Update this as needed
 
 # Initialize Pinecone
-try:
-    pc = Pinecone(api_key=PINECONE_API_KEY)
-    index = pc.Index(INDEX_NAME)
-except Exception as e:
-    print(f"Error initializing Pinecone: {str(e)}")
-    raise RuntimeError(f"Failed to initialize Pinecone: {str(e)}")
+# try:
+#     pc = Pinecone(api_key=PINECONE_API_KEY)
+#     index = pc.Index(INDEX_NAME)
+# except Exception as e:
+#     print(f"Error initializing Pinecone: {str(e)}")
+#     raise RuntimeError(f"Failed to initialize Pinecone: {str(e)}")
 
 # Add embedding function
-def get_embedding(text, embed_model="text-embedding-3-large"):
-    response = client.embeddings.create(input=[text], model=embed_model)
-    embedding = response.data[0].embedding
-    return embedding
+# def get_embedding(text, embed_model="text-embedding-3-large"):
+#     response = client.embeddings.create(input=[text], model=embed_model)
+#     embedding = response.data[0].embedding
+#     return embedding
 
-# Define prompts
-critique_prompt = """You are a seasoned senior developer and a key member of the engineering team. Your role is to critically evaluate task effort estimates by leveraging your deep experience and knowledge of the codebase, project history, and industry best practices.
-
-Task Title: {title}
-Task Description: {description}
-Epic Context:
-    - Epic Name: {epic_name}
-    - Epic Description: {epic_description}
-Developer Profile: {developer_profile}
-Current Estimate: {current_estimate}
-Already completed tasks: {already_completed_tasks_summary}
-
-Please review the above information and provide a detailed critique for over and under estimation of the effort required to complete the task.
-Be direct, constructive, and precise. Your feedback should help the team understand what gaps exist in the current effort estimation and guide them toward a more informed and realistic estimate.
-
-Final output:
-- critique of the current estimate
-- Suggested estimate: [X] story points. 
-
-Guidelines:
-- choose story points from the following scale of 1 to 20
-
-Critique criteria:
-- Do not include considerations related to environment-specific configurations, deployments, permissions, security, documentation, testing strategies, dependency management, logging, or migration processes for non-production environments.
-"""
-
-estimation_prompt = """Your role is to role-play as the assigned developer and evaluate task effort estimates by leveraging your deep experience and knowledge of the codebase and project. 
-Given the following task description and its associated epic, provide an estimated story point considering past similar tasks that have already been completed. 
-Use the epic's context to understand dependencies and overall scope. If the task appears redundant based on completed work, flag it as possibly unnecessary
-
-Task Title: {title}
-Task Description: {description}
-Epic Context:
-    - Epic Name: {epic_name}
-    - Epic Description: {epic_description}
-Similar historical tasks (semantic matches): {historic_data}
-Developer Profile (Please provide structured details like years of experience, familiarity with tech stack (1-5), historical estimation accuracy, etc.): {developer_profile}
-Completed Tasks in the Epic: 
-{already_completed_tasks_summary}
-
-Please review the above information and provide a detailed thought process for your estimation of the effort required to complete the task by assigned developer.
-Be direct, constructive, and precise. Your feedback should help the team understand effort required to complete the task and guide them toward a more informed and realistic estimate.
-
-Considering the factors above, developer skills, and historical data, recommend an appropriate story point estimate:
-
-Recommended estimate: [X] story points. 
-
-Guidelines:
-- choose story points from the following scale of 1 to 20
-"""
+# Load prompts from files
+prompt_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
+critique_prompt = PromptTemplate.from_file(os.path.join(prompt_dir, "critique_prompt.txt"))
+estimation_prompt = PromptTemplate.from_file(os.path.join(prompt_dir, "estimation_prompt.txt"))
 
 # Initialize models
 internal_model = ChatOpenAI(
@@ -86,7 +41,7 @@ internal_model = ChatOpenAI(
 )
 
 anthropic_model = ChatAnthropic(
-    model="claude-3-sonnet-20240229",
+    model="claude-3-7-sonnet-20250219",
     temperature=1,
     max_tokens=5000,
     thinking={"type": "enabled", "budget_tokens": 2000}
@@ -102,6 +57,7 @@ def query_similar_tasks(
 ):
     """
     Queries Pinecone to return similar tasks based on the given query.
+    This feature is temporarily disabled.
     
     Parameters:
         query (str): The search query "task title: ... ; task description: ... ;".
@@ -112,60 +68,61 @@ def query_similar_tasks(
     Returns:
         str: A formatted string of similar tasks data.
     """
+    return "Similar Tasks:\nNo historic similar tasks found (feature temporarily disabled).\n"
     
-    if enterprise_id == "" or enterprise_id == None:
-        return "Similar Tasks:\nNo historic similar tasks found.\n"
+    # if enterprise_id == "" or enterprise_id == None:
+    #     return "Similar Tasks:\nNo historic similar tasks found.\n"
         
     
-    # Enforce minimum threshold
-    if similarity_threshold < 0.45:
-        similarity_threshold = 0.45
+    # # Enforce minimum threshold
+    # if similarity_threshold < 0.45:
+    #     similarity_threshold = 0.45
     
-    # Convert query to embedding
-    query_vector = get_embedding(query)
+    # # Convert query to embedding
+    # query_vector = get_embedding(query)
     
-    # Define metadata filter if needed
-    filter_dict = {"assignee": {"$eq": assignee}} if filter_by_assignee else None
+    # # Define metadata filter if needed
+    # filter_dict = {"assignee": {"$eq": assignee}} if filter_by_assignee else None
     
-    # Query Pinecone using enterprise_id as namespace
-    response = index.query(
-        vector=query_vector,
-        top_k=3,
-        filter=filter_dict,
-        namespace=enterprise_id,
-        include_metadata=True
-    )
+    # # Query Pinecone using enterprise_id as namespace
+    # response = index.query(
+    #     vector=query_vector,
+    #     top_k=3,
+    #     filter=filter_dict,
+    #     namespace=enterprise_id,
+    #     include_metadata=True
+    # )
     
-    # Count tasks below threshold
-    below_threshold = [match for match in response['matches'] if float(match['score']) < similarity_threshold]
-    total_tasks = len(response['matches'])
+    # # Count tasks below threshold
+    # below_threshold = [match for match in response['matches'] if float(match['score']) < similarity_threshold]
+    # total_tasks = len(response['matches'])
     
-    # Format results
-    formatted_tasks = "Similar Tasks:\n"
+    # # Format results
+    # formatted_tasks = "Similar Tasks:\n"
     
-    # Check if all tasks are below the threshold
-    if len(below_threshold) == total_tasks:
-        formatted_tasks += "No historic similar tasks found.\n"
+    # # Check if all tasks are below the threshold
+    # if len(below_threshold) == total_tasks:
+    #     formatted_tasks += "No historic similar tasks found.\n"
     
-    # continue if the below threshold is not empty
-    for match in response['matches']:
-        metadata = match['metadata']
-        similarity_score = float(match['score'])
-        if float(match['score']) < similarity_threshold:
-            continue
+    # # continue if the below threshold is not empty
+    # for match in response['matches']:
+    #     metadata = match['metadata']
+    #     similarity_score = float(match['score'])
+    #     if float(match['score']) < similarity_threshold:
+    #         continue
         
-        formatted_tasks += (
-            f"- Title: {metadata.get('task-title', 'N/A')}\n"
-            f"  Story Point: {metadata.get('story-point', 'N/A')}\n"
-            f"  Assignee: {metadata.get('assignee', 'N/A')}\n"
-            f"  Description: {metadata.get('description', 'N/A')}\n"
-            f"  Epic Name: {metadata.get('epic-name', 'N/A')}\n"
-            f"  Task-type: {metadata.get('issue-type', 'N/A')}\n"
-            f"  Similarity Score: {similarity_score:.3f}"
-            f"{' (Below threshold)' if similarity_score < similarity_threshold else ''}\n"
-        )
+    #     formatted_tasks += (
+    #         f"- Title: {metadata.get('task-title', 'N/A')}\n"
+    #         f"  Story Point: {metadata.get('story-point', 'N/A')}\n"
+    #         f"  Assignee: {metadata.get('assignee', 'N/A')}\n"
+    #         f"  Description: {metadata.get('description', 'N/A')}\n"
+    #         f"  Epic Name: {metadata.get('epic-name', 'N/A')}\n"
+    #         f"  Task-type: {metadata.get('issue-type', 'N/A')}\n"
+    #         f"  Similarity Score: {similarity_score:.3f}"
+    #         f"{' (Below threshold)' if similarity_score < similarity_threshold else ''}\n"
+    #     )
     
-    return formatted_tasks
+    # return formatted_tasks
 
 @tool
 def estimate_effort(
