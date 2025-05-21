@@ -1,23 +1,21 @@
 from typing import TypedDict, Literal
 
 from langgraph.graph import StateGraph, END
-from utils.nodes import call_model, should_continue, tool_node
-from utils.state import AgentState, GraphConfig
-from agents.call_card.create_template_agent.agent_utils import structure_data_node
+from agents.modulir.estimate_effort.utils.nodes import call_model, should_continue, tool_node, normalize_story_points
+from agents.modulir.estimate_effort.utils.state import AgentState, GraphConfig
+from agents.modulir.estimate_effort.utils.agent_utils import structure_data_node
    
 # Define the config
 class GraphConfig(TypedDict):
-    model_name: Literal["openai"]
-
-
+    model_name: Literal["openai", "anthropic"]
 
 # Define a new graph
 workflow = StateGraph(AgentState, config_schema=GraphConfig)
 
-# Define the two nodes we will cycle between
+# Define the nodes we will cycle between
 workflow.add_node("agent", call_model)
 workflow.add_node("action", tool_node)
-workflow.add_node("normalize", structure_data_node)
+workflow.add_node("normalize", normalize_story_points)
 
 # Set the entrypoint as `agent`
 # This means that this node is the first one called
