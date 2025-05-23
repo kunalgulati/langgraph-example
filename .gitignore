@@ -11,3 +11,15 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+
+# Byte-compiled / optimized / DLL files
+*/__pycache__/
+*/__pycache__/*
+*$py.class
+*$py.class/*
+
+# LangGraph
+.langgraph-data
+.langgraph_api
+.langgraph_api/*
+
