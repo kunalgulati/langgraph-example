@@ -7,8 +7,7 @@ class AgentState(TypedDict):
     # add_messages is a reducer
     # See https://langchain-ai.github.io/langgraph/concepts/low_level/#reducers
     messages: Annotated[Sequence[BaseMessage], add_messages]
-    enterprise_id: Optional[str] = None
 
 class GraphConfig(TypedDict):
     """The configuration for the graph."""
-    model_name: Literal["openai", "anthropic"]
+    model_name: Literal["openai"]
